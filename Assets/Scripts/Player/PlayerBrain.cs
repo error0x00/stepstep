@@ -3,51 +3,44 @@ using UnityEngine.InputSystem;
 
 public class PlayerBrain : MonoBehaviour
 {
-    [SerializeField] private PlayerMotion motion;
-    private Camera mainCamera; // 마우스 좌표 변환을 위한 카메라 참조
+    public PlayerMotion motion;
+    private Camera mainCam;
 
     private void Awake()
     {
-        // 컴포넌트 자동 할당
-        if (motion == null) 
-            motion = GetComponent<PlayerMotion>();
-            
-        mainCamera = Camera.main; // 메인 카메라 가져오기
+        mainCam = Camera.main;
+        if (!motion) motion = GetComponent<PlayerMotion>();
     }
 
-    // [New] 매 프레임 실행: 마우스를 바라보게 함
     private void Update()
     {
-        // 마우스가 연결되어 있지 않다면 실행하지 않음 (안전장치)
-        if (Mouse.current == null) return;
-
-        // 1. 현재 마우스의 화면상 좌표를 가져옴
-        Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-        
-        // 2. 화면 좌표(Screen) -> 게임 월드 좌표(World)로 변환
-        // (카메라가 비추는 실제 게임 세상의 위치로 바꿈)
-        Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
-        
-        // 3. PlayerMotion에게 "저기를 봐!"라고 명령
-        motion.LookAt(mouseWorldPos);
-    }
-
-    // A키 연결용
-    public void OnLeft(InputAction.CallbackContext context)
-    {
-        // 키를 누르는 순간에만 실행
-        if (context.performed)
+        // 마우스 조준
+        if (Mouse.current != null && motion.aimPivot != null)
         {
-            motion.TryStep(StepType.Left);
+            Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector2 dir = mousePos - (Vector2)motion.aimPivot.position;
+            
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+            angle = Mathf.Clamp(angle, -60, 60); 
+            
+            motion.aimPivot.rotation = Quaternion.Euler(0, 0, angle);
         }
     }
 
-    // D키 연결용
-    public void OnRight(InputAction.CallbackContext context)
+    // Input System 이벤트 연결
+    public void OnStepLeft(InputAction.CallbackContext ctx)
     {
-        if (context.performed)
+        if (ctx.performed) 
         {
-            motion.TryStep(StepType.Right);
+            motion.OnStep(-1f);
+        }
+    }
+
+    public void OnStepRight(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed) 
+        {
+            motion.OnStep(1f);
         }
     }
 }

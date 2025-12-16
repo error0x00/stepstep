@@ -1,155 +1,81 @@
 using UnityEngine;
-
-// None 추가: 아무 발도 밟지 않은 초기 상태
-public enum StepType { None, Left, Right }
+using System.Collections.Generic;
 
 public class PlayerMotion : MonoBehaviour
 {
     [Header("Settings")]
-    // 나중에 리듬 보너스를 곱하기 위한 '기본' 힘
-    public float baseStepPower = 5f;
+    public float stepForce = 80f;      // 한 걸음의 힘
+    public float liftBonus = 0.8f;     // 머리 들었을 때 위로 당기는 힘 비율
 
-    // 일정 시간 이상 입력이 없으면 초기화 (A -> 한참 쉼 -> D 입력 시 꼬임 방지)
-    public float resetTime = 0.2f;
+    [Header("Pose")]
+    public Transform aimPivot;         // 머리 회전 기준점
+    public float poseStiffness = 1000f;// 관절이 버티는 힘
+    public float bendFactor = 60f;     // 머리 각도에 따라 몸이 굽혀지는 정도
 
-    // 추진을 적용할 체인 컨트롤러 (Body1 + Tail 추진)
-    public BodyChainController chain;
-
-    // Body1과 Tail에 힘을 분배하는 비율
-    public float body1DriveWeight = 0.6f;
-    public float tailDriveWeight = 0.4f;
-
-    [Header("Lift")]
-    // 머리를 들었을 때 위로 끌어올리는 비율
-    public float liftStrength = 0.6f;
-
-    // 위로 드는 최대 비율 (점프 방지)
-    public float maxLift = 0.7f;
-
-    [Header("Aim")]
-    // 머리 회전 피봇 (좌측 기준)
-    public Transform aimPivot;
-
-    // 조준 각도 제한
-    public float minAimAngle = -60f;
-    public float maxAimAngle = 60f;
-
-    // 마우스 추종 속도
-    public float aimFollowSpeed = 20f;
-
-    [Header("State")]
-    public StepType lastStep = StepType.None;
-    public float lastStepTime = 0f;
-
-    // 전진: 1, 후진: -1
-    public float moveDirection = 0f;
-
-    private Rigidbody2D rb;
-    private Rigidbody2D body1Rb;
-    private Rigidbody2D tailRb;
-
-    // 현재 조준 각도
-    private float aimAngle = 0f;
+    private List<Rigidbody2D> allRbs = new List<Rigidbody2D>();
+    private List<HingeJoint2D> allJoints = new List<HingeJoint2D>();
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        GetComponentsInChildren(true, allRbs);
+        GetComponentsInChildren(true, allJoints);
+    }
 
-        if (chain == null)
-            chain = GetComponentInParent<BodyChainController>();
+    private void FixedUpdate()
+    {
+        UpdatePose();
+    }
 
-        if (chain != null)
+    // A/D 키 입력 시 호출
+    public void OnStep(float directionX)
+    {
+        if (aimPivot == null) return;
+
+        // 머리 방향 기준 전진 벡터 계산
+        Vector2 forwardDir = aimPivot.right; 
+        
+        // 머리를 든 정도 계산 (0~1)
+        float liftAmount = Mathf.Clamp01(Vector2.Dot(forwardDir, Vector2.up));
+
+        // 최종 힘 벡터 계산 (전진 + 위로 들기)
+        Vector2 finalForce = (forwardDir * directionX) + (Vector2.up * liftAmount * liftBonus);
+        finalForce *= stepForce;
+
+        // 모든 마디에 힘 분산 적용
+        foreach (var rb in allRbs)
         {
-            body1Rb = chain.GetBody1();
-            tailRb = chain.GetTail();
+            rb.AddForce(finalForce, ForceMode2D.Impulse);
         }
     }
 
-    /// <summary>
-    /// 마우스 위치를 기준으로 머리 방향을 회전시킨다.
-    /// 이동 로직에는 영향을 주지 않는다.
-    /// </summary>
-    public void LookAt(Vector2 worldPosition)
+    // 머리 각도에 따라 몸통 굽히기
+    private void UpdatePose()
     {
-        if (aimPivot == null)
-            return;
+        if (aimPivot == null) return;
 
-        Vector2 dir = worldPosition - (Vector2)aimPivot.position;
-        if (dir.sqrMagnitude < 0.0001f)
-            return;
+        // 머리 각도 계산 (-180 ~ 180)
+        float angle = aimPivot.localEulerAngles.z;
+        if (angle > 180) angle -= 360;
 
-        float targetAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        targetAngle = Mathf.Clamp(targetAngle, minAimAngle, maxAimAngle);
-
-        float t = 1f - Mathf.Exp(-aimFollowSpeed * Time.deltaTime);
-        aimAngle = Mathf.LerpAngle(aimAngle, targetAngle, t);
-
-        aimPivot.rotation = Quaternion.Euler(0f, 0f, aimAngle);
-    }
-
-    public void TryStep(StepType step)
-    {
-        // 0. 시간 체크: 오래 쉬었으면 방향 초기화
-        if (Time.time - lastStepTime > resetTime)
+        // 위를 보고 있을 때만 몸을 세움
+        bool isLookingUp = angle > 10f; 
+        
+        foreach (var joint in allJoints)
         {
-            lastStep = StepType.None;
-            moveDirection = 0f;
+            var motor = joint.motor;
+            motor.maxMotorTorque = poseStiffness;
+
+            if (isLookingUp)
+            {
+                // 머리 각도에 비례해서 관절 굽힘
+                motor.motorSpeed = -angle * (bendFactor / 10f); 
+            }
+            else
+            {
+                // 평소에는 펴지도록 설정
+                motor.motorSpeed = 0; 
+            }
+            joint.motor = motor;
         }
-
-        // 1. 같은 발 연타 방지 (A-A-A 혹은 D-D-D)
-        if (lastStep == step)
-        {
-            lastStepTime = Time.time;
-            return;
-        }
-
-        // 2. 방향 결정 로직 (방향이 정해지지 않았을 때만 계산)
-        if (moveDirection == 0f && lastStep != StepType.None)
-        {
-            // A -> D = 전진
-            if (lastStep == StepType.Left && step == StepType.Right)
-                moveDirection = 1f;
-            // D -> A = 후진
-            else if (lastStep == StepType.Right && step == StepType.Left)
-                moveDirection = -1f;
-        }
-
-        // 3. 이동 (방향이 정해진 경우에만)
-        if (moveDirection != 0f)
-            Move();
-
-        lastStep = step;
-        lastStepTime = Time.time;
-    }
-
-    private void Move()
-    {
-        // 기본 전진 방향 (머리 방향 기준)
-        Vector2 forward = transform.right.normalized;
-
-        // 머리 각도 기반 위로 드는 성분 계산
-        float liftDot = Vector2.Dot(aimPivot.up, Vector2.up);
-        float lift = Mathf.Clamp01(liftDot) * liftStrength;
-        lift = Mathf.Min(lift, maxLift);
-
-        // 전진 + 위쪽 성분을 결합한 최종 이동 방향
-        Vector2 pushDir = (forward + Vector2.up * lift).normalized * moveDirection;
-
-        float bw = Mathf.Max(0f, body1DriveWeight);
-        float tw = Mathf.Max(0f, tailDriveWeight);
-        float sum = bw + tw;
-
-        if (sum < 0.0001f)
-        {
-            bw = 0.5f;
-            tw = 0.5f;
-            sum = 1f;
-        }
-
-        if (body1Rb != null)
-            body1Rb.AddForce(pushDir * baseStepPower * (bw / sum), ForceMode2D.Impulse);
-
-        if (tailRb != null)
-            tailRb.AddForce(pushDir * baseStepPower * (tw / sum), ForceMode2D.Impulse);
     }
 }
