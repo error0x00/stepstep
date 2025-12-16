@@ -1,0 +1,35 @@
+# Unity 프로젝트 관리 불필요 폴더 (Assets 밖)
+# Folders not needed for Unity project management (outside Assets)
+
+/Library/
+/Logs/
+/Temp/
+/UserSettings/
+/Builds/
+
+# Package Manager 관련 설정 (ProjectSettings 외)
+# Package Manager related settings (excluding ProjectSettings)
+/Packages/
+
+# Project Settings 중 사용자 환경에 따라 달라지는 파일 제외
+/ProjectSettings/*.asset
+# ProjectSettings/ProjectSettings.asset # 이 파일은 포함하는 것을 권장합니다.
+
+# Assets 폴더 내의 제외 대상
+# Exclusions within the Assets folder
+/Assets/Plugins/
+
+# IDE 및 OS 관련 파일 제외
+# Exclude IDE and OS related files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.DS_Store
+*.gz
+
+# 파일 메타데이터:
+# 만약 Assets 폴더 외부에 있는 파일의 .meta 파일이 생성된다면 제외합니다.
+*.meta
