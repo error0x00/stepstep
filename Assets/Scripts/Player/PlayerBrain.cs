@@ -3,44 +3,43 @@ using UnityEngine.InputSystem;
 
 public class PlayerBrain : MonoBehaviour
 {
-    public PlayerMotion motion;
-    private Camera mainCam;
+    [SerializeField] private PlayerMotion motion;
+    private Camera mainCamera;
 
     private void Awake()
     {
-        mainCam = Camera.main;
-        if (!motion) motion = GetComponent<PlayerMotion>();
+        if (motion == null) 
+            motion = GetComponent<PlayerMotion>();
+            
+        mainCamera = Camera.main;
     }
 
     private void Update()
     {
-        // 마우스 조준
-        if (Mouse.current != null && motion.aimPivot != null)
+        if (Mouse.current == null) return;
+
+        // 마우스 화면 좌표를 월드 좌표로 변환하여 시선 처리
+        Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+        Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
+        
+        motion.LookAt(mouseWorldPos);
+    }
+
+    // Input Action: StepLeft 연결
+    public void OnLeft(InputAction.CallbackContext context)
+    {
+        if (context.performed)
         {
-            Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector2 dir = mousePos - (Vector2)motion.aimPivot.position;
-            
-            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            angle = Mathf.Clamp(angle, -60, 60); 
-            
-            motion.aimPivot.rotation = Quaternion.Euler(0, 0, angle);
+            motion.TryStep(StepType.Left);
         }
     }
 
-    // Input System 이벤트 연결
-    public void OnStepLeft(InputAction.CallbackContext ctx)
+    // Input Action: StepRight 연결
+    public void OnRight(InputAction.CallbackContext context)
     {
-        if (ctx.performed) 
+        if (context.performed)
         {
-            motion.OnStep(-1f);
-        }
-    }
-
-    public void OnStepRight(InputAction.CallbackContext ctx)
-    {
-        if (ctx.performed) 
-        {
-            motion.OnStep(1f);
+            motion.TryStep(StepType.Right);
         }
     }
 }

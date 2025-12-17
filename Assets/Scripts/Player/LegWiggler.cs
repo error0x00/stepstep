@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class LegWiggler : MonoBehaviour
 {
@@ -6,52 +7,65 @@ public class LegWiggler : MonoBehaviour
     public Transform leftLeg;
     public Transform rightLeg;
 
-    [Header("Wiggle Settings")]
-    public float wiggleSpeed = 20f;  // 다리가 흔들리는 속도
-    public float wiggleAngle = 30f;  // 다리가 흔들리는 최대 각도
-    public float moveThreshold = 0.1f; // 움직임으로 간주할 최소 속도
+    [Header("Animation Settings")]
+    public float kickSpeed = 20f;   // 다리 뻗는 속도
+    public float returnSpeed = 10f; // 제자리로 돌아오는 속도
+    public float kickAngle = 45f;   // 다리가 움직이는 각도 (크기)
 
-    private Rigidbody2D rb;
     private Quaternion defaultRotL;
     private Quaternion defaultRotR;
+    
+    // 코루틴 중복 실행 방지
+    private Coroutine leftRoutine;
+    private Coroutine rightRoutine;
 
     private void Awake()
     {
-        // 자신의 물리 컴포넌트 참조 가져오기
-        rb = GetComponent<Rigidbody2D>(); 
-        
-        // 다리가 할당되어 있다면, 멈췄을 때 돌아갈 초기 각도를 저장
+        // 원래 각도 저장 (기준점)
         if (leftLeg) defaultRotL = leftLeg.localRotation;
         if (rightLeg) defaultRotR = rightLeg.localRotation;
     }
 
-    private void Update()
+    // PlayerMotion에서 호출할 함수 (입력 들어왔을 때만 실행)
+    public void DoStep(StepType step)
     {
-        if (rb == null) return;
+        if (step == StepType.Left && leftLeg != null)
+        {
+            if (leftRoutine != null) StopCoroutine(leftRoutine);
+            leftRoutine = StartCoroutine(KickRoutine(leftLeg, defaultRotL, kickAngle));
+        }
+        else if (step == StepType.Right && rightLeg != null)
+        {
+            if (rightRoutine != null) StopCoroutine(rightRoutine);
+            // 오른쪽 다리는 각도를 반대로(-kickAngle) 줘야 대칭이 맞을 수 있음 (상황에 따라 조절)
+            rightRoutine = StartCoroutine(KickRoutine(rightLeg, defaultRotR, -kickAngle));
+        }
+    }
 
-        // 현재 이동 속도가 설정한 임계값보다 빠른지 확인
-        if (rb.linearVelocity.magnitude > moveThreshold) 
+    private IEnumerator KickRoutine(Transform leg, Quaternion defaultRot, float angle)
+    {
+        // 1. 목표 각도 계산
+        Quaternion targetRot = defaultRot * Quaternion.Euler(0, 0, angle);
+        float t = 0f;
+
+        // 2. 팍! 하고 차기 (Lerp)
+        while (t < 1f)
         {
-            // 절대값(Abs)을 사용하여 0 ~ 1 사이의 값만 나오도록 제한 (안쪽으로 넘어가지 않음)
-            float wave = Mathf.Abs(Mathf.Sin(Time.time * wiggleSpeed));
-            
-            // 왼쪽 다리: 펼쳐진 상태(Default)에서 0도(일자) 방향으로만 왕복
-            if (leftLeg)
-            {
-                leftLeg.localRotation = defaultRotL * Quaternion.Euler(0, 0, wave * wiggleAngle);
-            }
-            
-            // 오른쪽 다리: 펼쳐진 상태(Default)에서 0도(일자) 방향으로만 왕복 (대칭)
-            if (rightLeg)
-            {
-                rightLeg.localRotation = defaultRotR * Quaternion.Euler(0, 0, -wave * wiggleAngle);
-            }
+            t += Time.deltaTime * kickSpeed;
+            leg.localRotation = Quaternion.Lerp(defaultRot, targetRot, t);
+            yield return null;
         }
-        else
+
+        // 3. 스르륵 돌아오기
+        t = 0f;
+        while (t < 1f)
         {
-            // 이동이 멈췄을 때는 원래 각도로 부드럽게 복귀
-            if (leftLeg) leftLeg.localRotation = Quaternion.Lerp(leftLeg.localRotation, defaultRotL, Time.deltaTime * 10f);
-            if (rightLeg) rightLeg.localRotation = Quaternion.Lerp(rightLeg.localRotation, defaultRotR, Time.deltaTime * 10f);
+            t += Time.deltaTime * returnSpeed;
+            leg.localRotation = Quaternion.Lerp(targetRot, defaultRot, t);
+            yield return null;
         }
+        
+        // 4. 확실하게 원위치 고정
+        leg.localRotation = defaultRot;
     }
 }

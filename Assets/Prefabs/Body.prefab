@@ -199,7 +199,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 0.5
+  m_Mass: 3
   m_LinearDamping: 5
   m_AngularDamping: 5
   m_GravityScale: 1
@@ -266,7 +266,7 @@ HingeJoint2D:
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 1
   m_Anchor: {x: 0, y: 0}
-  m_ConnectedAnchor: {x: -0.63, y: -0.5}
+  m_ConnectedAnchor: {x: -1.26, y: -0.5}
   m_UseConnectedAnchor: 1
   m_UseMotor: 0
   m_Motor:
@@ -274,8 +274,8 @@ HingeJoint2D:
     m_MaximumMotorForce: 10000
   m_UseLimits: 1
   m_AngleLimits:
-    m_LowerAngle: -90
-    m_UpperAngle: 90
+    m_LowerAngle: -80
+    m_UpperAngle: 80
 --- !u!114 &4381744260956027836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -290,9 +290,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LegWiggler
   leftLeg: {fileID: 2877738021341837431}
   rightLeg: {fileID: 8734537178141107046}
-  wiggleSpeed: 20
-  wiggleAngle: 50
-  moveThreshold: 0.1
+  kickSpeed: 20
+  returnSpeed: 10
+  kickAngle: 45
 --- !u!210 &4373968295354489523
 SortingGroup:
   m_ObjectHideFlags: 0

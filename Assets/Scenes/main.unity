@@ -1969,8 +1969,8 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 5
+  m_Mass: 5
+  m_LinearDamping: 20
   m_AngularDamping: 5
   m_GravityScale: 1
   m_Material: {fileID: 0}
@@ -1983,7 +1983,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!1001 &2496763767926392613
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2031,6 +2031,22 @@ PrefabInstance:
     - target: {fileID: 5625299662133623152, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Color.r
       value: 0.3333333
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Mass
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_LinearDamping
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6069527140157750732, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Name
@@ -2115,7 +2131,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5144068351388186613}
@@ -2131,6 +2147,9 @@ GameObject:
   - component: {fileID: 5144068351388186613}
   - component: {fileID: 2365538901673284273}
   - component: {fileID: 2044092992528193919}
+  - component: {fileID: 5144068351388186616}
+  - component: {fileID: 5144068351388186615}
+  - component: {fileID: 5144068351388186614}
   m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
@@ -2148,7 +2167,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3562496606967036342, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_ConnectedAnchor.x
-      value: -0.90000004
+      value: 0.099999994
       objectReference: {fileID: 0}
     - target: {fileID: 3562496606967036342, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_ConnectedAnchor.y
@@ -2163,12 +2182,24 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Mass
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Constraints
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_LinearDamping
-      value: 2
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6069527140157750732, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Name
@@ -2236,13 +2267,141 @@ Transform:
   m_GameObject: {fileID: 3619375734180205562}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: 0, z: 0}
+  m_LocalPosition: {x: -1, y: 0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2932214079298777812}
   m_Father: {fileID: 6618536042710142286}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5144068351388186614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3619375734180205562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
+  m_Actions: {fileID: -944628639613478452, guid: 0c5334cf8d0d1024ea3d50c8132acf57, type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1004174457}
+        m_TargetAssemblyTypeName: TestVisualizer, Assembly-CSharp
+        m_MethodName: OnLeft
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5144068351388186616}
+        m_TargetAssemblyTypeName: PlayerBrain, Assembly-CSharp
+        m_MethodName: OnLeft
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: fb80f6cc-a557-42fb-9a3d-fac047e15d6f
+    m_ActionName: 'GamePlay/StepLeft[/Keyboard/a]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1004174457}
+        m_TargetAssemblyTypeName: TestVisualizer, Assembly-CSharp
+        m_MethodName: OnRight
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5144068351388186616}
+        m_TargetAssemblyTypeName: PlayerBrain, Assembly-CSharp
+        m_MethodName: OnRight
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e414bd1f-9fd0-48ea-bd5b-b5e3a614b25d
+    m_ActionName: 'GamePlay/StepRight[/Keyboard/d]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f939a55b-7fde-4458-b7f2-5232186b6afd
+    m_ActionName: 'GamePlay/Look[/Mouse/position]'
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: GamePlay
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
+--- !u!114 &5144068351388186615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3619375734180205562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aaae23e25c3ad8947b9bf37a9fa23589, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMotion
+  stepPower: 5
+  forwardAssist: 3
+  resetTime: 0.3
+  maxSpeed: 0.1
+  penaltyRatio: 0.3
+  sensitivity: 0.5
+  returnSpeed: 1
+  liftTorqueStrength: 5
+  liftForceMultiplier: 2
+  minAngleForLift: 15
+  floorLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+--- !u!114 &5144068351388186616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3619375734180205562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ef5359dc3d7454b813d3ec895b4430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBrain
+  motion: {fileID: 5144068351388186615}
 --- !u!1 &5771304456580224589
 GameObject:
   m_ObjectHideFlags: 0
@@ -2252,9 +2411,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6618536042710142286}
-  - component: {fileID: 6618536042710142289}
-  - component: {fileID: 6618536042710142288}
-  - component: {fileID: 6618536042710142287}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2309,6 +2465,22 @@ PrefabInstance:
     - target: {fileID: 5625299662133623152, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Color.r
       value: 0.3333333
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Mass
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_LinearDamping
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5768097811102355253, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6069527140157750732, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Name
@@ -2402,126 +2574,6 @@ Transform:
   - {fileID: 386025385}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6618536042710142287
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5771304456580224589}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
-  m_Actions: {fileID: -944628639613478452, guid: 0c5334cf8d0d1024ea3d50c8132acf57, type: 3}
-  m_NotificationBehavior: 2
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayerBrain, Assembly-CSharp
-        m_MethodName: OnLeft
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1004174457}
-        m_TargetAssemblyTypeName: TestVisualizer, Assembly-CSharp
-        m_MethodName: OnLeft
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: fb80f6cc-a557-42fb-9a3d-fac047e15d6f
-    m_ActionName: 'GamePlay/StepLeft[/Keyboard/a]'
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PlayerBrain, Assembly-CSharp
-        m_MethodName: OnRight
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1004174457}
-        m_TargetAssemblyTypeName: TestVisualizer, Assembly-CSharp
-        m_MethodName: OnRight
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: e414bd1f-9fd0-48ea-bd5b-b5e3a614b25d
-    m_ActionName: 'GamePlay/StepRight[/Keyboard/d]'
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: f939a55b-7fde-4458-b7f2-5232186b6afd
-    m_ActionName: 'GamePlay/Look[/Mouse/position]'
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: GamePlay
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
---- !u!114 &6618536042710142288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5771304456580224589}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aaae23e25c3ad8947b9bf37a9fa23589, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMotion
-  stepForce: 80
-  liftBonus: 0.8
-  aimPivot: {fileID: 0}
-  poseStiffness: 1000
-  bendFactor: 60
---- !u!114 &6618536042710142289
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5771304456580224589}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2ef5359dc3d7454b813d3ec895b4430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerBrain
-  motion: {fileID: 0}
 --- !u!212 &8439966389339713808
 SpriteRenderer:
   m_ObjectHideFlags: 0
