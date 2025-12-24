@@ -8,9 +8,8 @@ public class PlayerBrain : MonoBehaviour
 
     private void Awake()
     {
-        if (motion == null) 
-            motion = GetComponent<PlayerMotion>();
-            
+        // Get PlayerMotion component
+        if (motion == null) motion = GetComponent<PlayerMotion>();
         mainCamera = Camera.main;
     }
 
@@ -18,28 +17,23 @@ public class PlayerBrain : MonoBehaviour
     {
         if (Mouse.current == null) return;
 
-        // 마우스 화면 좌표를 월드 좌표로 변환하여 시선 처리
-        Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-        Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
+        // Convert mouse position to world space
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Vector2 worldPos = mainCamera.ScreenToWorldPoint(mousePos);
         
-        motion.LookAt(mouseWorldPos);
+        // Update head look direction
+        motion.LookAt(worldPos);
     }
 
-    // Input Action: StepLeft 연결
     public void OnLeft(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            motion.TryStep(StepType.Left);
-        }
+        // Execute left step logic
+        if (context.performed) motion.TryStep(StepType.Left);
     }
 
-    // Input Action: StepRight 연결
     public void OnRight(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            motion.TryStep(StepType.Right);
-        }
+        // Execute right step logic
+        if (context.performed) motion.TryStep(StepType.Right);
     }
 }

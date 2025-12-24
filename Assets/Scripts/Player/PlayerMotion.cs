@@ -1,218 +1,141 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
 using Sirenix.OdinInspector;
+using QFSW.QC;
 
 public enum StepType { None, Left, Right }
 
 public class PlayerMotion : MonoBehaviour
 {
-    #region Movement Settings
-    [BoxGroup("이동 설정")]
-    [LabelText("발차기 주 추진력")]
-    public float stepPower = 8f;
-    
-    [BoxGroup("이동 설정")]
-    [LabelText("전진 수평 보조 힘")]
-    public float forwardAssist = 3f;
-    
-    [BoxGroup("이동 설정")]
-    [LabelText("방향 초기화 시간"), Tooltip("이 시간 이상 걸음을 안 떼면 방향이 리셋됩니다")]
-    public float resetTime = 0.5f;
-    
-    [BoxGroup("이동 설정")]
-    [LabelText("최고 속도 판정 시간"), Tooltip("이 시간 내에 걸으면 최고 속도로 판정")]
-    public float maxSpeed = 0.2f;
-    
-    [BoxGroup("이동 설정")]
-    [LabelText("같은 발 연속 페널티"), Tooltip("같은 발로 연속으로 걸을 때 힘 감소 비율")]
-    public float penaltyRatio = 0.3f;
-    #endregion
+    [BoxGroup("Move Settings")]
+    [LabelText("발차기 추진력")] public float stepPower = 12f;
+    [BoxGroup("Move Settings")]
+    [LabelText("보조 전진 힘")] public float forwardAssist = 5f;
+    [BoxGroup("Move Settings")]
+    [LabelText("입력 유지 시간")] public float resetTime = 0.5f;
 
-    #region Head Control
-    [BoxGroup("머리 조작")]
-    [LabelText("마우스 감도")]
-    public float sensitivity = 0.1f;
-    
-    [BoxGroup("머리 조작")]
-    [LabelText("고개 복귀 속도"), Tooltip("자동으로 정면을 바라보는 속도")]
-    public float returnSpeed = 5.0f;
-    #endregion
+    [BoxGroup("Head Settings")]
+    [LabelText("머리 회전 속도")] public float headRotationSpeed = 20f;
 
-    #region Body Lift
-    [BoxGroup("몸 일으키기")]
-    [LabelText("토크 강도")]
-    [InfoBox("값이 클수록 빠르게 일어나지만 너무 크면 뒤로 넘어갈 수 있습니다.", InfoMessageType.Warning)]
-    public float liftTorqueStrength = 15.0f;
-    
-    [BoxGroup("몸 일으키기")]
-    [LabelText("상승 힘 배율")]
-    public float liftForceMultiplier = 2.0f;
-    
-    [BoxGroup("몸 일으키기")]
-    [LabelText("몸 들기 시작 각도")]
-    public float minAngleForLift = 15f;
-    #endregion
+    [BoxGroup("Body Settings")]
+    [LabelText("몸통 관절 리스트"), InfoBox("자동으로 수집됩니다. 수동 연결 불필요.")]
+    public List<HingeJoint2D> bodyJoints = new List<HingeJoint2D>();
+    [BoxGroup("Body Settings")]
+    [LabelText("관절 굴절 속도")] public float bodyRotationSpeed = 5f;
+    [BoxGroup("Body Settings")]
+    [LabelText("당기는 유격 강도")] public float pullStrength = 0.15f;
 
-    #region Floor Detection
-    [BoxGroup("바닥 감지")]
-    [LabelText("바닥 레이어")]
-    public LayerMask floorLayer;
-    #endregion
+    [BoxGroup("Legs")]
+    [ReadOnly] public List<LegWiggler> allWigglers = new List<LegWiggler>();
 
-    #region Status (Read Only)
-    [TitleGroup("실시간 상태", "현재 플레이어의 상태를 보여줍니다")]
-    [HorizontalGroup("실시간 상태/Row1")]
-    [LabelText("현재 속도"), DisplayAsString]
-    public float CurrentSpeed { get; private set; }
-    
-    [HorizontalGroup("실시간 상태/Row1")]
-    [LabelText("이동 방향"), DisplayAsString]
-    private string MoveDirectionDisplay => moveDirection == 0 ? "정지" : moveDirection > 0 ? "전진" : "후진";
-    
-    [HorizontalGroup("실시간 상태/Row2")]
-    [LabelText("마지막 발"), DisplayAsString]
-    private string LastStepDisplay => lastStep == StepType.None ? "-" : lastStep == StepType.Left ? "왼발" : "오른발";
-    
-    [HorizontalGroup("실시간 상태/Row2")]
-    [LabelText("현재 머리 각도"), DisplayAsString]
-    private string CurrentHeadAngleDisplay => $"{currentHeadAngle:F1}°";
-    #endregion
-
-    #region Private Variables
-    [HideInInspector] public List<LegWiggler> allWigglers = new List<LegWiggler>();
-    
     private Rigidbody2D rb;
-    private Collider2D headCollider;
-    private StepType lastStep = StepType.None; 
     private float lastStepTime;
     private float moveDirection = 0f;
-    private float currentHeadAngle = 0f;
-    #endregion
+    private float[] currentTargetAngles;
+    private bool isSpeedMet = false;
+
+    private void Reset()
+    {
+        // 에디터에서 컴포넌트 추가 시 관절 자동 수집
+        AutoFindJoints();
+    }
+
+    [Button("관절 자동 찾기"), GUIColor(0, 1, 0)]
+    public void AutoFindJoints()
+    {
+        // 자식 오브젝트의 모든 힌지 조인트를 찾아 리스트에 등록
+        bodyJoints.Clear();
+        HingeJoint2D[] joints = GetComponentsInChildren<HingeJoint2D>();
+        bodyJoints.AddRange(joints);
+    }
 
     private void Awake()
     {
+        // 물리 제어를 위한 리지드바디 참조 및 다리 스크립트 수집
         rb = GetComponent<Rigidbody2D>();
-        headCollider = GetComponentInChildren<Collider2D>();
-        
+        if (bodyJoints.Count == 0) AutoFindJoints();
+        currentTargetAngles = new float[bodyJoints.Count];
+
         if (transform.parent != null)
-        {
             allWigglers.AddRange(transform.parent.GetComponentsInChildren<LegWiggler>());
-        }
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        // 머리가 바닥에 닿았으면 회전 멈추기 (레버 효과 방지)
-        bool isTouchingFloor = headCollider != null && headCollider.IsTouchingLayers(floorLayer);
-        
-        if (isTouchingFloor && Mathf.Abs(rb.angularVelocity) > 0.1f)
-        {
-            // 회전 속도 감쇄
-            rb.angularVelocity *= 0.5f;
-        }
+        // 입력 간격에 따른 속도 조건 및 관절 배열 크기 확인
+        isSpeedMet = (Time.time - lastStepTime) <= resetTime;
+
+        if (currentTargetAngles.Length != bodyJoints.Count)
+            currentTargetAngles = new float[bodyJoints.Count];
+
+        UpdateBodyRotation();
     }
 
-    public void LookAt(Vector2 mousePosition)
+    public void LookAt(Vector2 targetPos)
     {
-        if (rb == null) return;
+        // 머리의 독립적인 회전 및 방향 업데이트
+        Vector2 diff = targetPos - (Vector2)transform.position;
+        float targetAngle = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
+        rb.MoveRotation(Mathf.LerpAngle(rb.rotation, targetAngle, Time.deltaTime * headRotationSpeed));
+    }
 
-        float mouseDelta = 0f;
+    private void UpdateBodyRotation()
+    {
+        // 머리 각도에 따른 몸통 굴절 방향 및 순차 제어
+        float headAngle = Mathf.DeltaAngle(0, transform.eulerAngles.z);
+        float direction = Mathf.Abs(headAngle) > 15f ? Mathf.Sign(headAngle) : 0f;
 
-        if (Mouse.current != null)
+        for (int i = 0; i < bodyJoints.Count; i++)
         {
-            mouseDelta = Mouse.current.delta.y.ReadValue() * sensitivity;
-        }
+            HingeJoint2D joint = bodyJoints[i];
+            if (joint == null) continue;
 
-        if (Mathf.Abs(mouseDelta) > 0.01f)
-        {
-            float directionMult = (moveDirection < 0) ? -1f : 1f; 
-            currentHeadAngle += mouseDelta * directionMult;
-        }
-        else
-        {
-            float timeSinceStep = Time.time - lastStepTime;
-            CurrentSpeed = Mathf.InverseLerp(resetTime, maxSpeed, timeSinceStep);
-            float currentPenalty = 1f - CurrentSpeed;
-            currentHeadAngle = Mathf.Lerp(currentHeadAngle, 0f, returnSpeed * currentPenalty * Time.deltaTime);
-        }
+            float limitAngle = direction > 0 ? joint.limits.max : joint.limits.min;
+            float finalTarget = 0f;
 
-        rb.MoveRotation(currentHeadAngle);
+            if (isSpeedMet && direction != 0f && i < bodyJoints.Count - 1)
+            {
+                // 앞 마디가 목표치에 도달했을 때만 다음 마디 굴절 시작
+                bool isParentReady = (i == 0) || (Mathf.Abs(currentTargetAngles[i - 1] - (direction > 0 ? bodyJoints[i-1].limits.max : bodyJoints[i-1].limits.min)) < 1f);
+                
+                if (isParentReady)
+                    currentTargetAngles[i] = Mathf.MoveTowards(currentTargetAngles[i], limitAngle, bodyRotationSpeed * 10f * Time.deltaTime);
+            }
+            else
+            {
+                // 조건 미충족 시 바닥으로 각도 복원
+                currentTargetAngles[i] = Mathf.MoveTowards(currentTargetAngles[i], 0f, bodyRotationSpeed * 20f * Time.deltaTime);
+            }
+
+            finalTarget = currentTargetAngles[i];
+            if (i == 0) finalTarget += headAngle * pullStrength;
+
+            if (joint.attachedRigidbody != null)
+                joint.attachedRigidbody.MoveRotation(finalTarget);
+        }
     }
 
     public void TryStep(StepType step)
     {
-        if (rb == null) return;
-
-        if (Time.time - lastStepTime > resetTime)
-        {
-            moveDirection = 0f;
-            lastStep = StepType.None;
-        }
-
+        // 입력 리듬에 따른 이동 방향 설정 및 다리 동작 실행
+        if (Time.time - lastStepTime > resetTime) moveDirection = 0f;
         if (moveDirection == 0f)
         {
-            if (step == StepType.Left)       moveDirection = 1f;  
-            else if (step == StepType.Right) moveDirection = -1f; 
+            if (step == StepType.Left) moveDirection = 1f;
+            else if (step == StepType.Right) moveDirection = -1f;
         }
 
-        float currentPower = stepPower;
-        float currentAssist = forwardAssist;
-
-        if (lastStep != StepType.None && step == lastStep)
-        {
-            currentPower *= penaltyRatio;
-            currentAssist *= penaltyRatio;
-        }
-
-        foreach (var wiggler in allWigglers)
-        {
-            if (wiggler != null) wiggler.DoStep(step);
-        }
-
-        Move(currentPower, currentAssist);
-
-        lastStep = step;
+        foreach (var wiggler in allWigglers) if (wiggler != null) wiggler.DoStep(step);
+        
+        Move(stepPower, forwardAssist);
         lastStepTime = Time.time;
     }
 
     private void Move(float power, float assist)
     {
-        // 현재 머리 각도 계산 (월드 각도 기준)
-        float headAngle = transform.eulerAngles.z;
-        if (headAngle > 180f) headAngle -= 360f;
-        
-        // 후진 시 각도 반전
-        float effectiveAngle = moveDirection > 0 ? headAngle : -headAngle;
-
-        // 1. 머리가 바라보는 방향의 힘
-        Vector2 lookForce = transform.right * power * moveDirection;
-
-        // 2. 고개를 들었을 때 추가 상승 힘 적용
-        if (effectiveAngle > minAngleForLift)
-        {
-            float liftRatio = Mathf.Clamp01((effectiveAngle - minAngleForLift) / 45f);
-            Vector2 liftForce = Vector2.up * power * liftRatio * liftForceMultiplier;
-            lookForce += liftForce;
-        }
-
-        // 3. 수평 보조 힘
-        float assistMultiplier = Mathf.Clamp01(1f - Mathf.Abs(transform.right.y));
-        Vector2 pushForce = Vector2.right * moveDirection * assist * assistMultiplier;
-
-        // 힘 적용
-        rb.AddForce(lookForce + pushForce, ForceMode2D.Impulse);
-
-        // 4. 토크 적용 (몸을 회전시키는 힘)
-        // 머리가 땅에 닿았을 때는 토크를 적용하지 않음 (레버 효과 방지)
-        bool isTouchingFloor = headCollider != null && headCollider.IsTouchingLayers(floorLayer);
-        
-        if (!isTouchingFloor && Mathf.Abs(effectiveAngle) > 5f)
-        {
-            float torqueDirection = Mathf.Sign(effectiveAngle);
-            float torqueMagnitude = Mathf.Abs(effectiveAngle) / 90f;
-            
-            rb.AddTorque(torqueDirection * liftTorqueStrength * torqueMagnitude * moveDirection, ForceMode2D.Impulse);
-        }
+        // Vector3인 transform.right를 Vector2로 변환하여 물리 연산 오류 방지
+        Vector2 forward = transform.right;
+        Vector2 force = forward * moveDirection * power + Vector2.right * moveDirection * assist;
+        rb.AddForce(force, ForceMode2D.Impulse);
     }
 }
