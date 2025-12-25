@@ -8,7 +8,7 @@ public class PlayerBrain : MonoBehaviour
 
     private void Awake()
     {
-        // Get PlayerMotion component
+        // PlayerMotion 컴포넌트 가져오기
         if (motion == null) motion = GetComponent<PlayerMotion>();
         mainCamera = Camera.main;
     }
@@ -17,23 +17,38 @@ public class PlayerBrain : MonoBehaviour
     {
         if (Mouse.current == null) return;
 
-        // Convert mouse position to world space
+        // 마우스 위치를 월드 좌표로 변환
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Vector2 worldPos = mainCamera.ScreenToWorldPoint(mousePos);
         
-        // Update head look direction
+        // 머리 조향 업데이트
         motion.LookAt(worldPos);
     }
 
     public void OnLeft(InputAction.CallbackContext context)
     {
-        // Execute left step logic
+        // 왼쪽 발자국 로직 실행
         if (context.performed) motion.TryStep(StepType.Left);
     }
 
     public void OnRight(InputAction.CallbackContext context)
     {
-        // Execute right step logic
+        // 오른쪽 발자국 로직 실행
         if (context.performed) motion.TryStep(StepType.Right);
+    }
+
+    public void OnBite(InputAction.CallbackContext context)
+    {
+        // 무는 동작 실행
+        if (context.performed) motion.Bite();
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        // Goal 태그에 닿으면 다음 스테이지로 이동
+        if (other.CompareTag("Goal"))
+        {
+            StageManager.Instance.NextStage();
+        }
     }
 }

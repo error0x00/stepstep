@@ -31,7 +31,11 @@ public class PlayerMotion : MonoBehaviour
     private float[] currentTargetAngles;
     private bool isSpeedMet = false;
     private List<LegWiggler> allWigglers = new List<LegWiggler>();
+    private List<MouthWiggler> allMouths = new List<MouthWiggler>();
     private Rigidbody2D tailRb;
+
+    // 리듬 활성화 여부 확인용
+    public bool IsRhythmActive => isSpeedMet;
 
     private void Awake()
     {
@@ -40,7 +44,11 @@ public class PlayerMotion : MonoBehaviour
         currentTargetAngles = new float[bodyJoints.Count];
 
         if (transform.parent != null)
+        {
+            // 모든 다리 및 입 조절기 컴포넌트 수집
             allWigglers.AddRange(transform.parent.GetComponentsInChildren<LegWiggler>());
+            allMouths.AddRange(transform.parent.GetComponentsInChildren<MouthWiggler>());
+        }
 
         // 마지막 관절에 연결된 꼬리 리지드바디 수집
         if (bodyJoints.Count > 0)
@@ -141,6 +149,15 @@ public class PlayerMotion : MonoBehaviour
 
         lastStepType = step;
         lastStepTime = Time.time;
+    }
+
+    public void Bite()
+    {
+        // 모든 입 조절기에 동작 수행 명령
+        foreach (var mouth in allMouths)
+        {
+            if (mouth != null) mouth.DoBite();
+        }
     }
 
     [Button("관절 자동 찾기")]
