@@ -2753,8 +2753,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMotion
   stepPower: 8
   forwardAssist: 8
-  resetTime: 0.5
+  resetTime: 0.3
   headRotationSpeed: 15
+  bodyPrefab: {fileID: 6069527140157750732, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
+  segmentOffset: 0.6
   bodyJoints:
   - {fileID: 1862077881}
   - {fileID: 1542326319}
@@ -2864,7 +2866,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6069527140157750732, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_Name
-      value: Tail
+      value: Body3
       objectReference: {fileID: 0}
     - target: {fileID: 7029558726814360911, guid: 135a40a865cd65940a1d6a16086998f1, type: 3}
       propertyPath: m_LocalScale.x
