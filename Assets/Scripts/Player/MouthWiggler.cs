@@ -9,26 +9,29 @@ public class MouthWiggler : MonoBehaviour
     public Transform mouthR;
 
     [Header("Animation Settings")]
-    public float biteSpeed = 20f;   // 입 벌리는 속도
-    public float returnSpeed = 10f; // 제자리로 돌아오는 속도
-    public float biteAngle = 45f;   // 입 벌어지는 각도
+    public float biteSpeed = 20f;
+    public float returnSpeed = 10f;
+    public float biteAngle = 45f;
 
     [Header("Eat Settings")]
-    public float eatRadius = 0.5f;  // 먹기 인식 반지름 (동그란 범위)
-    public Vector2 eatOffset = new Vector2(0.5f, 0f); // 입 앞쪽으로의 거리 조절
-    public int hitsToDestroy = 3;   // 사라지기까지 필요한 클릭 횟수
+    public float eatRadius = 0.5f;
+    public Vector2 eatOffset = new Vector2(0.5f, 0f);
+    public int hitsToDestroy = 3;
 
     private Quaternion defaultRotL;
     private Quaternion defaultRotR;
     private Coroutine biteRoutine;
+    private PlayerMotion playerMotion; // 성장을 위해 모션 참조 추가
 
-    // 나뭇잎별 클릭 횟수 기록
     private Dictionary<GameObject, int> leafHitCounts = new Dictionary<GameObject, int>();
 
     private void Awake()
     {
         if (mouthL) defaultRotL = mouthL.localRotation;
         if (mouthR) defaultRotR = mouthR.localRotation;
+        
+        // 머리(부모)에서 PlayerMotion 찾기
+        playerMotion = GetComponentInParent<PlayerMotion>();
     }
 
     public void DoBite()
@@ -36,16 +39,12 @@ public class MouthWiggler : MonoBehaviour
         if (biteRoutine != null) StopCoroutine(biteRoutine);
         biteRoutine = StartCoroutine(BiteRoutine());
         
-        // 무는 순간 주변에 나뭇잎이 있는지 확인
         CheckForFood();
     }
 
     private void CheckForFood()
     {
-        // 입 앞쪽 위치 계산
         Vector2 checkPos = (Vector2)transform.position + (Vector2)(transform.right * eatOffset.x);
-        
-        // 동그란 범위 안에 있는 모든 물체 감지
         Collider2D[] hitColliders = Physics2D.OverlapCircleAll(checkPos, eatRadius);
         
         foreach (var hit in hitColliders)
@@ -60,16 +59,15 @@ public class MouthWiggler : MonoBehaviour
                 }
 
                 leafHitCounts[leaf]++;
-                Debug.Log($"나뭇잎을 물었습니다! ({leafHitCounts[leaf]}/{hitsToDestroy})");
 
                 if (leafHitCounts[leaf] >= hitsToDestroy)
                 {
                     leafHitCounts.Remove(leaf);
                     Destroy(leaf);
-                    // 여기에 나중에 성장(마디 추가) 함수를 연결할 예정입니다.
+                    
+                    // 나뭇잎이 사라질 때 성장 시도
+                    if (playerMotion != null) playerMotion.AddSegment();
                 }
-                
-                // 한 번에 나뭇잎 하나만 물도록 처리
                 break; 
             }
         }
@@ -104,7 +102,6 @@ public class MouthWiggler : MonoBehaviour
         mouthR.localRotation = defaultRotR;
     }
 
-    // 에디터 화면에서 감지 범위를 빨간 원으로 시각화
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
