@@ -14,6 +14,14 @@ public class PlayerBody : MonoBehaviour
     [BoxGroup("Body Settings")]
     [LabelText("당기는 유격 강도")] public float pullStrength = 0.15f;
 
+    [BoxGroup("Body Settings")]
+    [Button("관절 자동 찾기")]
+    public void AutoFindJoints()
+    {
+        bodyJoints.Clear();
+        bodyJoints.AddRange(GetComponentsInChildren<HingeJoint2D>());
+    }
+
     [BoxGroup("Eat Settings")]
     [LabelText("먹기 인식 범위")] public float eatRadius = 0.5f;
     [BoxGroup("Eat Settings")]
@@ -40,7 +48,7 @@ public class PlayerBody : MonoBehaviour
         headRb.MoveRotation(Mathf.LerpAngle(headRb.rotation, targetAngle, Time.deltaTime * headRotationSpeed));
     }
 
-    // 무는 동작 시 호출되어 전방의 나뭇잎을 체크하고 먹는 로직을 실행함
+    // 전방의 나뭇잎을 체크하고 먹기 로직 실행
     public void CheckForFood(System.Action onEatSuccess)
     {
         Vector2 checkPos = (Vector2)headRb.transform.position + (Vector2)(headRb.transform.right * eatOffset.x);
@@ -66,7 +74,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 발차기 입력 시 모든 다리 컴포넌트에 애니메이션 재생 신호를 전달함
+    // 모든 다리 컴포넌트에 발차기 애니메이션 신호 전달
     public void ExecuteLegStep(StepType step, List<LegWiggler> wigglers)
     {
         foreach (var wiggler in wigglers)
@@ -75,7 +83,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 현재 몸통 마디 리스트 중 가장 마지막 마디를 꼬리로 지정하고 리지드바디를 참조함
+    // 현재 몸통 마디 리스트 중 가장 마지막 마디를 꼬리로 지정하고 리지드바디 참조
     public void UpdateTailReference()
     {
         if (bodyJoints.Count > 0)
@@ -86,7 +94,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 리듬 상태에 따라 몸통 마디들을 순차적으로 굴절시켜 물결치는 움직임을 만듦
+    // 리듬 상태에 따라 몸통 마디들을 순차적으로 굴절시켜 물결치는 움직임 생성
     public void RefreshBody(bool isSpeedMet)
     {
         if (bodyJoints.Count == 0) return;
@@ -126,10 +134,14 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    [Button("관절 자동 찾기")]
-    public void AutoFindJoints()
+    // 하이어라키에서 오브젝트 선택 시 먹기 인식 범위를 빨간색 원으로 표시
+    private void OnDrawGizmosSelected()
     {
-        bodyJoints.Clear();
-        bodyJoints.AddRange(GetComponentsInChildren<HingeJoint2D>());
+        if (headRb == null) headRb = GetComponentInChildren<Rigidbody2D>();
+        if (headRb == null) return;
+
+        Gizmos.color = Color.red;
+        Vector2 checkPos = (Vector2)headRb.transform.position + (Vector2)(headRb.transform.right * eatOffset.x);
+        Gizmos.DrawWireSphere(checkPos, eatRadius);
     }
 }

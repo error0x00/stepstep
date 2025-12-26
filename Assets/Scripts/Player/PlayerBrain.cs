@@ -26,6 +26,7 @@ public class PlayerBrain : MonoBehaviour
     {
         wigglers.Clear();
         mouths.Clear();
+        // 최상위 Player 아래의 모든 자식에서 수집
         wigglers.AddRange(GetComponentsInChildren<LegWiggler>());
         mouths.AddRange(GetComponentsInChildren<MouthWiggler>());
     }
@@ -49,6 +50,7 @@ public class PlayerBrain : MonoBehaviour
         if (value.isPressed) 
         {
             mover.TryStep(StepType.Left);
+            // 발차기 애니메이션 호출을 물리 로직이 모인 Body에서 수행
             body.ExecuteLegStep(StepType.Left, wigglers);
         }
     }
@@ -68,7 +70,9 @@ public class PlayerBrain : MonoBehaviour
     {
         if (value.isPressed)
         {
+            // 입 벌리고 닫는 애니메이션 수행
             foreach (var mouth in mouths) mouth.DoBite();
+            // 전방 나뭇잎 체크 및 성장 로직 실행
             body.CheckForFood(() => Grow());
         }
     }
@@ -77,6 +81,6 @@ public class PlayerBrain : MonoBehaviour
     public void Grow()
     {
         grower.AddSegment(body);
-        RefreshComponents();
+        RefreshComponents(); // 새 마디의 다리 수집
     }
 }

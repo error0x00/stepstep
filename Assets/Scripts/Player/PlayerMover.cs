@@ -20,6 +20,7 @@ public class PlayerMover : MonoBehaviour
 
     private void Awake()
     {
+        // 자식인 Head의 Rigidbody2D를 참조
         rb = GetComponentInChildren<Rigidbody2D>();
     }
 
