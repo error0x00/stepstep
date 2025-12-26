@@ -12,21 +12,17 @@ public class TestVisualizer : MonoBehaviour
     public Color normalColor = Color.white; 
     public Color pressedColor = new Color(1f, 0.5f, 0.5f); 
 
-    // 왼쪽 발차기 입력 상태에 따라 UI 색상 변경
-    public void OnStepLeft(InputValue value)
+    // 왼쪽 입력 상태에 따라 UI 색상을 변경함
+    public void OnStepLeft(InputAction.CallbackContext context)
     {
-        if (imageA != null)
-        {
-            imageA.color = value.isPressed ? pressedColor : normalColor;
-        }
+        if (imageA == null) return;
+        imageA.color = context.ReadValueAsButton() ? pressedColor : normalColor;
     }
 
-    // 오른쪽 발차기 입력 상태에 따라 UI 색상 변경
-    public void OnStepRight(InputValue value)
+    // 오른쪽 입력 상태에 따라 UI 색상을 변경함
+    public void OnStepRight(InputAction.CallbackContext context)
     {
-        if (imageD != null)
-        {
-            imageD.color = value.isPressed ? pressedColor : normalColor;
-        }
+        if (imageD == null) return;
+        imageD.color = context.ReadValueAsButton() ? pressedColor : normalColor;
     }
 }
