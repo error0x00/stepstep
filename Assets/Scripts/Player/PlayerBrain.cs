@@ -1,54 +1,82 @@
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
 public class PlayerBrain : MonoBehaviour
 {
-    [SerializeField] private PlayerMotion motion;
-    private Camera mainCamera;
+    private PlayerMover mover;
+    private PlayerBody body;
+    private PlayerGrower grower;
+    private List<LegWiggler> wigglers = new List<LegWiggler>();
+    private List<MouthWiggler> mouths = new List<MouthWiggler>();
+    private Camera mainCam;
 
     private void Awake()
     {
-        // PlayerMotion 컴포넌트 가져오기
-        if (motion == null) motion = GetComponent<PlayerMotion>();
-        mainCamera = Camera.main;
+        mover = GetComponent<PlayerMover>();
+        body = GetComponent<PlayerBody>();
+        grower = GetComponent<PlayerGrower>();
+        mainCam = Camera.main;
+        
+        RefreshComponents();
+    }
+
+    // 자식 오브젝트들로부터 다리(Wiggler)와 입(Mouth) 컴포넌트를 찾아 리스트를 최신화함
+    public void RefreshComponents()
+    {
+        wigglers.Clear();
+        mouths.Clear();
+        wigglers.AddRange(GetComponentsInChildren<LegWiggler>());
+        mouths.AddRange(GetComponentsInChildren<MouthWiggler>());
     }
 
     private void Update()
     {
-        if (Mouse.current == null) return;
+        // 마우스 월드 좌표를 계산하여 머리가 바라보게 함
+        Vector2 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        body.LookAt(mousePos);
 
-        // 마우스 위치를 월드 좌표로 변환
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-        Vector2 worldPos = mainCamera.ScreenToWorldPoint(mousePos);
+        // 1. 리듬 상태 업데이트
+        mover.UpdateRhythm();
         
-        // 머리 조향 업데이트
-        motion.LookAt(worldPos);
+        // 2. 몸통 회전 및 꼬리 고정 (원본 로직 순서)
+        body.RefreshBody(mover.IsRhythmActive);
     }
 
-    public void OnLeft(InputAction.CallbackContext context)
+    // Input Action: StepLeft[/Keyboard/a]와 연결됨
+    public void OnStepLeft(InputValue value)
     {
-        // 왼쪽 발자국 로직 실행
-        if (context.performed) motion.TryStep(StepType.Left);
-    }
-
-    public void OnRight(InputAction.CallbackContext context)
-    {
-        // 오른쪽 발자국 로직 실행
-        if (context.performed) motion.TryStep(StepType.Right);
-    }
-
-    public void OnBite(InputAction.CallbackContext context)
-    {
-        // 무는 동작 실행
-        if (context.performed) motion.Bite();
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        // Goal 태그에 닿으면 다음 스테이지로 이동
-        if (other.CompareTag("Goal"))
+        if (value.isPressed) 
         {
-            StageManager.Instance.NextStage();
+            mover.TryStep(StepType.Left);
+            body.ExecuteLegStep(StepType.Left, wigglers);
         }
+    }
+
+    // Input Action: StepRight[/Keyboard/d]와 연결됨
+    public void OnStepRight(InputValue value)
+    {
+        if (value.isPressed) 
+        {
+            mover.TryStep(StepType.Right);
+            body.ExecuteLegStep(StepType.Right, wigglers);
+        }
+    }
+
+    // Input Action: Bite[/Mouse/leftButton]와 연결됨
+    public void OnBite(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            foreach (var mouth in mouths) mouth.DoBite();
+            body.CheckForFood(() => Grow());
+        }
+    }
+
+    // MouthWiggler에서 나뭇잎을 먹었을 때 호출되어 성장을 수행함
+    public void Grow()
+    {
+        grower.AddSegment(body);
+        RefreshComponents();
     }
 }
