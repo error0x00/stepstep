@@ -27,7 +27,7 @@ public class PlayerBody : MonoBehaviour
     [BoxGroup("Eat Settings")]
     [LabelText("먹기 인식 오프셋")] public Vector2 eatOffset = new Vector2(0.5f, 0f);
     [BoxGroup("Eat Settings")]
-    [LabelText("파괴에 필요한 타격수")] public int hitsToDestroy = 3;
+    [LabelText("파괴(성장)에 필요한 타격수")] public int hitsToDestroy = 3;
 
     private Rigidbody2D headRb;
     private Rigidbody2D tailRb;
@@ -48,7 +48,7 @@ public class PlayerBody : MonoBehaviour
         headRb.MoveRotation(Mathf.LerpAngle(headRb.rotation, targetAngle, Time.deltaTime * headRotationSpeed));
     }
 
-    // 전방의 나뭇잎을 체크하고 먹기 로직 실행
+    // 전방의 나뭇잎(StageLeaf)을 체크하고 타격 횟수에 따라 이미지를 갱신하거나 성장을 실행함
     public void CheckForFood(System.Action onEatSuccess)
     {
         Vector2 checkPos = (Vector2)headRb.transform.position + (Vector2)(headRb.transform.right * eatOffset.x);
@@ -58,15 +58,21 @@ public class PlayerBody : MonoBehaviour
         {
             if (hit.CompareTag("Leaf"))
             {
-                GameObject leaf = hit.gameObject;
-                if (!leafHitCounts.ContainsKey(leaf)) leafHitCounts.Add(leaf, 0);
+                GameObject leafObj = hit.gameObject;
+                StageLeaf stageLeaf = leafObj.GetComponent<StageLeaf>();
+                
+                if (stageLeaf == null) continue;
 
-                leafHitCounts[leaf]++;
+                if (!leafHitCounts.ContainsKey(leafObj)) leafHitCounts.Add(leafObj, 0);
 
-                if (leafHitCounts[leaf] >= hitsToDestroy)
+                // 나뭇잎 타격 횟수 증가 및 단계별 이미지 업데이트 요청
+                leafHitCounts[leafObj]++;
+                stageLeaf.UpdateLeafVisual(leafHitCounts[leafObj]);
+
+                // 설정된 타격 횟수에 도달하면 데이터를 정리하고 성장 로직 호출
+                if (leafHitCounts[leafObj] >= hitsToDestroy)
                 {
-                    leafHitCounts.Remove(leaf);
-                    Destroy(leaf);
+                    leafHitCounts.Remove(leafObj);
                     onEatSuccess?.Invoke();
                 }
                 break; 
@@ -83,7 +89,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 현재 몸통 마디 리스트 중 가장 마지막 마디를 꼬리로 지정하고 리지드바디 참조
+    // 현재 몸통 마디 리스트 중 가장 마지막 마디를 꼬리로 지정하고 리지드바디 참조를 갱신함
     public void UpdateTailReference()
     {
         if (bodyJoints.Count > 0)
@@ -94,7 +100,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 리듬 상태에 따라 몸통 마디들을 순차적으로 굴절시켜 물결치는 움직임 생성
+    // 리듬 상태와 회전 방향에 따라 몸통 마디들을 순차적으로 굴절시켜 물결치는 움직임을 생성함
     public void RefreshBody(bool isSpeedMet)
     {
         if (bodyJoints.Count == 0) return;
@@ -134,7 +140,7 @@ public class PlayerBody : MonoBehaviour
         }
     }
 
-    // 하이어라키에서 오브젝트 선택 시 먹기 인식 범위를 빨간색 원으로 표시
+    // 하이어라키에서 오브젝트 선택 시 먹기 인식 범위를 빨간색 원으로 표시함
     private void OnDrawGizmosSelected()
     {
         if (headRb == null) headRb = GetComponentInChildren<Rigidbody2D>();
